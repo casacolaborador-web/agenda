@@ -39,7 +39,7 @@
 
     .hidden { display:none !important; }
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    .row-total td { font-weight:700; background:#fafafa; }
+    tfoot td{ font-weight:700; background:#f8fafc; }
   </style>
 </head>
 
@@ -249,9 +249,7 @@
 
         <span id="dash-info" class="pill">—</span>
         <div style="flex:1"></div>
-
-        <!-- Novo: Exportar -->
-        <button id="btn-dash-export" class="btn-modal btn-azul" type="button">Exportar Excel (CSV)</button>
+        <button id="btn-dash-export" class="btn-modal btn-azul" type="button">Exportar Excel</button>
         <button id="btn-dash-close" class="btn-modal btn-cinza" type="button">Fechar</button>
       </div>
 
@@ -278,6 +276,6 @@
   </div>
 
   <!-- atualize a versão se fizer novo deploy para forçar o refresh do navegador -->
-  <script src="script.js?v=20251023-export-total"></script>
+  <script src="script.js?v=20251023-exp"></script>
 </body>
 </html>
