@@ -123,7 +123,7 @@ let isAdmin = false;
 let isSubmittingAdmin = false;
 let atividadeSelecionada = 'TODAS';
 let dashView = 'day'; // 'day' | 'month'
-const ADMIN_PASSWORD = 'admin';
+const ADMIN_PASSWORD = 'C@saAdmin#123';
 
 const professionalRules = {
   'Ana': { activities: ['Fit Class (Ballet Fit)', 'Funcional Dance', 'Power Gap'], type: 'aula', defaultVagas: 15 },
@@ -882,3 +882,4 @@ btnDashExport.addEventListener('click', exportarDashboard);
 
 // ================== Start ==================
 carregarAgenda();
+
