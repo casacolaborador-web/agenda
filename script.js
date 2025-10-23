@@ -112,6 +112,7 @@ const dashActivityTable   = document.getElementById('dash-activity-table');
 const dashProfTable       = document.getElementById('dash-prof-table');
 const dashAPTable         = document.getElementById('dash-ap-table');
 const btnDashClose        = document.getElementById('btn-dash-close');
+const btnDashExport       = document.getElementById('btn-dash-export');
 const dashViewDayBtn      = document.getElementById('dash-view-day');
 const dashViewMonthBtn    = document.getElementById('dash-view-month');
 
@@ -121,6 +122,7 @@ let agendamentoAtual = {};
 let isAdmin = false;
 let isSubmittingAdmin = false;
 let atividadeSelecionada = 'TODAS';
+let dashView = 'day'; // 'day' | 'month'
 const ADMIN_PASSWORD = 'admin';
 
 const professionalRules = {
@@ -543,7 +545,9 @@ function voltarConsulta(){ consultaViewInicial.classList.remove('hidden'); consu
 
 // ================== Funções auxiliares para o DASHBOARD ==================
 function formatNum(n){ return (n||0).toLocaleString('pt-BR'); }
-function buildTable(headers, rows){
+
+// buildTable agora aceita um footer opcional (array de células)
+function buildTable(headers, rows, footer){
   let html = '<table class="dash-table"><thead><tr>';
   headers.forEach(h=> html += '<th>' + h + '</th>');
   html += '</tr></thead><tbody>';
@@ -556,12 +560,15 @@ function buildTable(headers, rows){
       html += '</tr>';
     });
   }
-  html += '</tbody></table>';
+  html += '</tbody>';
+  if (footer && footer.length){
+    html += '<tfoot><tr>';
+    footer.forEach((cell,i)=>{ const cls=(i>=headers.length-3)?' class="number"':''; html += '<td'+cls+'>' + cell + '</td>'; });
+    html += '</tr></tfoot>';
+  }
+  html += '</table>';
   return html;
 }
-
-// ===== Novo: visão diária x mensal =====
-let dashView = 'day'; // 'day' | 'month'
 
 function toISODate(d){
   const z = (n)=> String(n).padStart(2,'0');
@@ -579,15 +586,12 @@ async function fetchAgendaBetween(startISO, endISO){
   const start = new Date(startISO);
   const end   = new Date(endISO);
   const items = [];
-
-  // percorre dias (máx. ~31/dash mensal)
   for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
     const dataBR = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
     try{
       const result = await getJSON(apiUrl, { action:'getSchedule', date:dataBR });
       if (result.status === 'success' && Array.isArray(result.data)) {
         const elegiveis = result.data.filter(isElegivel);
-        // normaliza (usa próprios campos do backend)
         for (const s of elegiveis) items.push(s);
       }
     }catch(e){
@@ -620,7 +624,11 @@ function agregaResumo(slots){
   const sumRes = rowsAtv.reduce((a,r)=> a + parseInt((r[2]+'').replace(/\./g,''),10),0);
   const sumDisp = rowsAtv.reduce((a,r)=> a + parseInt((r[3]+'').replace(/\./g,''),10),0);
 
-  return { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp };
+  const profTot = rowsProf.reduce((a,r)=> a + parseInt((r[1]+'').replace(/\./g,''),10),0);
+  const profRes = rowsProf.reduce((a,r)=> a + parseInt((r[2]+'').replace(/\./g,''),10),0);
+  const profDisp= rowsProf.reduce((a,r)=> a + parseInt((r[3]+'').replace(/\./g,''),10),0);
+
+  return { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp, profTot, profRes, profDisp };
 }
 
 async function atualizarDashboard(){
@@ -630,10 +638,11 @@ async function atualizarDashboard(){
     const dataBR = dataISO.split('-').reverse().join('/');
     const slotsDia = todosOsAgendamentos.filter(s=> s.data === dataBR).filter(isElegivel);
 
-    const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp } = agregaResumo(slotsDia);
+    const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp, profTot, profRes, profDisp } = agregaResumo(slotsDia);
 
     dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
-    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf);
+    // >>> totalizador no resumo dos profissionais
+    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf, ['TOTAL', formatNum(profTot), formatNum(profRes), formatNum(profDisp)]);
     dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
 
     const label = new Intl.DateTimeFormat('pt-BR', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' }).format(new Date(dataISO));
@@ -643,13 +652,13 @@ async function atualizarDashboard(){
     if(!yM){ dashActivityTable.innerHTML=''; dashProfTable.innerHTML=''; dashAPTable.innerHTML=''; dashInfo.textContent='—'; return; }
     const { start, end } = monthRange(yM);
 
-    // carrega mês inteiro chamando a API por dia
     dashInfo.textContent = 'Mês: carregando...';
     const items = await fetchAgendaBetween(toISODate(start), toISODate(end));
-    const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp } = agregaResumo(items);
+    const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp, profTot, profRes, profDisp } = agregaResumo(items);
 
     dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
-    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf);
+    // >>> totalizador no resumo dos profissionais (mensal)
+    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf, ['TOTAL', formatNum(profTot), formatNum(profRes), formatNum(profDisp)]);
     dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
 
     const label = new Intl.DateTimeFormat('pt-BR', { month:'long', year:'numeric' }).format(start);
@@ -692,6 +701,83 @@ function openDashboard(){
   dashSelectDate.value = seletorData.value || toISODate(new Date());
   setDashView('day'); // inicia no diário
   abrirModal(modalAdminDashboard);
+}
+
+/* ================== EXPORTAÇÃO CSV (Excel) ================== */
+// Converte uma tabela HTML (em string) para CSV (pt-BR usa ; como separador no Excel)
+function tableHTMLToCSV(html, title){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html.trim();
+  const table = tmp.querySelector('table');
+  if(!table) return '';
+
+  const sep = ';';
+  const lines = [];
+
+  // título opcional
+  if (title) lines.push(`"${title}"`);
+
+  // header
+  const ths = Array.from(table.querySelectorAll('thead th')).map(th => `"${th.textContent.replace(/"/g,'""')}"`);
+  if (ths.length) lines.push(ths.join(sep));
+
+  // body
+  Array.from(table.querySelectorAll('tbody tr')).forEach(tr=>{
+    const tds = Array.from(tr.querySelectorAll('td')).map(td => {
+      const txt = td.textContent.replace(/\u00A0/g,' ').trim();
+      return `"${txt.replace(/"/g,'""')}"`;
+    });
+    lines.push(tds.join(sep));
+  });
+
+  // footer (se existir)
+  const tfoot = table.querySelector('tfoot');
+  if (tfoot){
+    const fds = Array.from(tfoot.querySelectorAll('td')).map(td => `"${td.textContent.replace(/"/g,'""')}"`);
+    lines.push(fds.join(sep));
+  }
+
+  return lines.join('\r\n') + '\r\n';
+}
+
+function downloadCSV(filename, csvString){
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function nomeBaseArquivo(){
+  if (dashView === 'day'){
+    const d = dashSelectDate.value || toISODate(new Date());
+    return `dashboard-dia-${d}`;
+  } else {
+    const m = dashSelectMonth.value;
+    return `dashboard-mes-${m}`;
+  }
+}
+
+function exportarDashboard(){
+  const base = nomeBaseArquivo();
+
+  const csvAtv  = tableHTMLToCSV(dashActivityTable.innerHTML, 'Resumo por Atividade');
+  const csvProf = tableHTMLToCSV(dashProfTable.innerHTML,     'Resumo por Profissional');
+  const csvAP   = tableHTMLToCSV(dashAPTable.innerHTML,       'Atividade × Profissional');
+
+  if (!csvAtv && !csvProf && !csvAP){
+    alert('Não há dados para exportar.');
+    return;
+  }
+
+  // Dispara três downloads — o Excel abre normalmente .csv
+  if (csvAtv)  downloadCSV(`${base}-atividade.csv`, csvAtv);
+  if (csvProf) downloadCSV(`${base}-profissional.csv`, csvProf);
+  if (csvAP)   downloadCSV(`${base}-atividade-profissional.csv`, csvAP);
 }
 
 // ================== Listeners ==================
@@ -792,6 +878,7 @@ dashSelectDate.addEventListener('change', atualizarDashboard);
 dashSelectMonth.addEventListener('change', atualizarDashboard);
 dashViewDayBtn.addEventListener('click', ()=> setDashView('day'));
 dashViewMonthBtn.addEventListener('click', ()=> setDashView('month'));
+btnDashExport.addEventListener('click', exportarDashboard);
 
 // ================== Start ==================
 carregarAgenda();
