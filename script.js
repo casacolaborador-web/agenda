@@ -106,11 +106,14 @@ const adminSelectData         = document.getElementById('admin-select-data');
 // Dashboard
 const modalAdminDashboard = document.getElementById('modal-admin-dashboard');
 const dashSelectDate      = document.getElementById('dash-select-date');
+const dashSelectMonth     = document.getElementById('dash-select-month');
 const dashInfo            = document.getElementById('dash-info');
 const dashActivityTable   = document.getElementById('dash-activity-table');
 const dashProfTable       = document.getElementById('dash-prof-table');
 const dashAPTable         = document.getElementById('dash-ap-table');
 const btnDashClose        = document.getElementById('btn-dash-close');
+const dashViewDayBtn      = document.getElementById('dash-view-day');
+const dashViewMonthBtn    = document.getElementById('dash-view-month');
 
 // ================== Estado ==================
 let todosOsAgendamentos = [];
@@ -153,7 +156,6 @@ function expandPanel(panel){
   panel.classList.add('open');
   panel.style.overflow = 'hidden';
   panel.style.maxHeight = panel.scrollHeight + 'px';
-  // ao final, deixa auto para acomodar futuras linhas/resize
   const onEnd = (e)=>{
     if (e.target !== panel) return;
     panel.style.maxHeight = 'none';
@@ -163,14 +165,11 @@ function expandPanel(panel){
 }
 function collapsePanel(panel){
   if (!panel) return;
-  // fixa a altura atual, força reflow e anima para 0
   panel.style.maxHeight = panel.scrollHeight + 'px';
-  panel.offsetHeight; // reflow
+  panel.offsetHeight;
   panel.classList.remove('open');
   panel.style.maxHeight = '0px';
 }
-
-/* inicializa fechando tudo */
 function initializeAccordions(){
   container.querySelectorAll('.atividade-content').forEach(sec=>{
     sec.classList.remove('open');
@@ -216,7 +215,7 @@ async function renderizarAgendaParaData(dataISO){
         atividadeSelecionada = 'TODAS';
       }
       container.innerHTML = criarHTMLAgendaFiltrada(todosOsAgendamentos, atividadeSelecionada);
-      initializeAccordions(); // colapsa tudo
+      initializeAccordions();
     } else {
       container.innerHTML = '<p class="alerta-erro">Erro ao carregar: ' + (result.message || 'Resposta inválida.') + '</p>';
       menuAtividades.innerHTML = '';
@@ -542,7 +541,7 @@ async function handleCancelBooking(event){
 }
 function voltarConsulta(){ consultaViewInicial.classList.remove('hidden'); consultaViewResultados.classList.add('hidden'); consultaMensagem.textContent=''; }
 
-// ================== Dashboard (Admin) ==================
+// ================== Funções auxiliares para o DASHBOARD ==================
 function formatNum(n){ return (n||0).toLocaleString('pt-BR'); }
 function buildTable(headers, rows){
   let html = '<table class="dash-table"><thead><tr>';
@@ -560,16 +559,47 @@ function buildTable(headers, rows){
   html += '</tbody></table>';
   return html;
 }
-function openDashboard(){ dashSelectDate.value = seletorData.value; atualizarDashboard(); abrirModal(modalAdminDashboard); }
-function atualizarDashboard(){
-  const dataISO = dashSelectDate.value;
-  if(!dataISO){ dashActivityTable.innerHTML=''; dashProfTable.innerHTML=''; dashAPTable.innerHTML=''; return; }
-  const dataBR = dataISO.split('-').reverse().join('/');
 
-  const slotsDia = todosOsAgendamentos.filter(s=> s.data === dataBR).filter(isElegivel);
+// ===== Novo: visão diária x mensal =====
+let dashView = 'day'; // 'day' | 'month'
 
+function toISODate(d){
+  const z = (n)=> String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+}
+function monthRange(yyyyMM){
+  const [y, m] = yyyyMM.split('-').map(n => parseInt(n, 10));
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0);
+  return { start, end };
+}
+
+// Busca dados da API entre duas datas ISO (YYYY-MM-DD) inclusive
+async function fetchAgendaBetween(startISO, endISO){
+  const start = new Date(startISO);
+  const end   = new Date(endISO);
+  const items = [];
+
+  // percorre dias (máx. ~31/dash mensal)
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+    const dataBR = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    try{
+      const result = await getJSON(apiUrl, { action:'getSchedule', date:dataBR });
+      if (result.status === 'success' && Array.isArray(result.data)) {
+        const elegiveis = result.data.filter(isElegivel);
+        // normaliza (usa próprios campos do backend)
+        for (const s of elegiveis) items.push(s);
+      }
+    }catch(e){
+      console.warn('Falha ao carregar', dataBR, e.message);
+    }
+  }
+  return items;
+}
+
+function agregaResumo(slots){
   const byAtv = {}, byProf = {}, byAP = {};
-  slotsDia.forEach(s=>{
+  slots.forEach(s=>{
     const keyAtv = s.atividade, keyProf = s.profissional, keyAP = keyAtv + '|' + keyProf;
     if(!byAtv[keyAtv]) byAtv[keyAtv] = { tot:0, res:0 };
     if(!byProf[keyProf]) byProf[keyProf] = { tot:0, res:0 };
@@ -586,14 +616,82 @@ function atualizarDashboard(){
   const rowsAP = Object.keys(byAP).sort((a,b)=>a.localeCompare(b,'pt-BR'))
     .map(k=>{ const o=byAP[k]; return [o.atv + ' × ' + o.prof, formatNum(o.tot), formatNum(o.res), formatNum(o.tot - o.res)]; });
 
-  dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
-  dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf);
-  dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
-
   const sumTot = rowsAtv.reduce((a,r)=> a + parseInt((r[1]+'').replace(/\./g,''),10),0);
   const sumRes = rowsAtv.reduce((a,r)=> a + parseInt((r[2]+'').replace(/\./g,''),10),0);
   const sumDisp = rowsAtv.reduce((a,r)=> a + parseInt((r[3]+'').replace(/\./g,''),10),0);
-  dashInfo.textContent = 'Total: ' + formatNum(sumTot) + ' • Reservas: ' + formatNum(sumRes) + ' • Disponíveis: ' + formatNum(sumDisp);
+
+  return { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp };
+}
+
+async function atualizarDashboard(){
+  if (dashView === 'day') {
+    const dataISO = dashSelectDate.value;
+    if(!dataISO){ dashActivityTable.innerHTML=''; dashProfTable.innerHTML=''; dashAPTable.innerHTML=''; dashInfo.textContent='—'; return; }
+    const dataBR = dataISO.split('-').reverse().join('/');
+    const slotsDia = todosOsAgendamentos.filter(s=> s.data === dataBR).filter(isElegivel);
+
+    const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp } = agregaResumo(slotsDia);
+
+    dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
+    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf);
+    dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
+
+    const label = new Intl.DateTimeFormat('pt-BR', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' }).format(new Date(dataISO));
+    dashInfo.textContent = `Dia: ${label} • Total: ${formatNum(sumTot)} • Reservas: ${formatNum(sumRes)} • Disponíveis: ${formatNum(sumDisp)}`;
+  } else {
+    const yM = dashSelectMonth.value;
+    if(!yM){ dashActivityTable.innerHTML=''; dashProfTable.innerHTML=''; dashAPTable.innerHTML=''; dashInfo.textContent='—'; return; }
+    const { start, end } = monthRange(yM);
+
+    // carrega mês inteiro chamando a API por dia
+    dashInfo.textContent = 'Mês: carregando...';
+    const items = await fetchAgendaBetween(toISODate(start), toISODate(end));
+    const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp } = agregaResumo(items);
+
+    dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
+    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf);
+    dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
+
+    const label = new Intl.DateTimeFormat('pt-BR', { month:'long', year:'numeric' }).format(start);
+    dashInfo.textContent = `Mês: ${label} • Total: ${formatNum(sumTot)} • Reservas: ${formatNum(sumRes)} • Disponíveis: ${formatNum(sumDisp)}`;
+  }
+}
+
+// Alterna UI e dispara atualização
+function setDashView(next){
+  dashView = next;
+  if (dashView === 'day') {
+    dashViewDayBtn.classList.add('active');   dashViewDayBtn.setAttribute('aria-selected','true');
+    dashViewMonthBtn.classList.remove('active'); dashViewMonthBtn.setAttribute('aria-selected','false');
+
+    dashSelectDate.classList.remove('hidden');
+    dashSelectDate.previousElementSibling.classList.remove('hidden'); // label Data
+    dashSelectMonth.classList.add('hidden');
+    dashSelectMonth.previousElementSibling.classList.add('hidden');   // label Mês
+
+    if (!dashSelectDate.value) dashSelectDate.value = toISODate(new Date());
+  } else {
+    dashViewMonthBtn.classList.add('active'); dashViewMonthBtn.setAttribute('aria-selected','true');
+    dashViewDayBtn.classList.remove('active'); dashViewDayBtn.setAttribute('aria-selected','false');
+
+    dashSelectMonth.classList.remove('hidden');
+    dashSelectMonth.previousElementSibling.classList.remove('hidden'); // label Mês
+    dashSelectDate.classList.add('hidden');
+    dashSelectDate.previousElementSibling.classList.add('hidden');     // label Data
+
+    if (!dashSelectMonth.value) {
+      const d = new Date();
+      dashSelectMonth.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    }
+  }
+  atualizarDashboard();
+}
+
+// Abre modal já com valores padrão
+function openDashboard(){
+  dashSelectDate.value = seletorData.value || toISODate(new Date());
+  setDashView('day'); // inicia no diário
+  abrirModal(modalAdminDashboard);
 }
 
 // ================== Listeners ==================
@@ -691,7 +789,9 @@ menuAtividades.addEventListener('click', function(e){
 // Dashboard handlers
 btnDashClose.addEventListener('click', function(){ fecharModal(modalAdminDashboard); });
 dashSelectDate.addEventListener('change', atualizarDashboard);
+dashSelectMonth.addEventListener('change', atualizarDashboard);
+dashViewDayBtn.addEventListener('click', ()=> setDashView('day'));
+dashViewMonthBtn.addEventListener('click', ()=> setDashView('month'));
 
 // ================== Start ==================
 carregarAgenda();
-
