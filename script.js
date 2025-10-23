@@ -22,7 +22,7 @@
 })();
 
 // ================== CONFIG ==================
-const apiUrl = 'https://script.google.com/macros/s/AKfycbzP0ZIMKk80WED0OOfuJ9kl4lGFjzS3Q1WwlfU_B2H4RNCF3Al55eGET32fLNbZIIAF/exec';
+const apiUrl = 'https://script.google.com/a/macros/hmv.org.br/s/AKfycbwEosf-kEKHJ10S2KbCb4AlIT8NJP3E19HMsDGH-xytwLiMsGWQmekFTMRTOW2jAKqN/exec';
 
 // ================== Utils ==================
 function formEncode(obj) { const out=[]; for(const k in obj){ if(!Object.prototype.hasOwnProperty.call(obj,k)) continue; out.push(encodeURIComponent(k)+'='+encodeURIComponent(String(obj[k])));} return out.join('&'); }
@@ -694,3 +694,4 @@ dashSelectDate.addEventListener('change', atualizarDashboard);
 
 // ================== Start ==================
 carregarAgenda();
+
