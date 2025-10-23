@@ -4,6 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Agenda de Horários - Moinhos de Vento</title>
+
+  <!-- 🌐 Meta Open Graph / WhatsApp / Facebook -->
+  <meta property="og:title" content="Agenda de Horários - Moinhos de Vento">
+  <meta property="og:description" content="Agende suas aulas e atividades na Casa do Colaborador do Hospital Moinhos de Vento.">
+  <meta property="og:image" content="https://casacolaborador-web.github.io/agenda/img/preview-agenda.jpg">
+  <meta property="og:url" content="https://casacolaborador-web.github.io/agenda/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+
+  <!-- 🐦 Meta Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Agenda de Horários - Moinhos de Vento">
+  <meta name="twitter:description" content="Agende suas aulas e atividades na Casa do Colaborador.">
+  <meta name="twitter:image" content="https://casacolaborador-web.github.io/agenda/img/preview-agenda.jpg">
+
   <link rel="stylesheet" href="style.css">
   <style>
     /* Estilos simples do dashboard */
@@ -17,6 +32,7 @@
     .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef6ff; color:#0b5ed7; font-size:12px; }
   </style>
 </head>
+
 <body>
   <div class="personagem-container"><div class="personagens-loop"></div></div>
 
@@ -66,7 +82,7 @@
       <!-- E-mail opcional (confirmação de reserva) -->
       <div class="form-group">
         <label for="input-email">E-mail (opcional para confirmação):</label>
-        <input type="email" id="input-email" >
+        <input type="email" id="input-email">
       </div>
 
       <div id="modal-mensagem" aria-live="polite"></div>
@@ -92,7 +108,7 @@
         <!-- E-mail opcional (confirmação de cancelamento) -->
         <div class="form-group">
           <label for="input-consulta-email">E-mail (opcional para notificações de cancelamento):</label>
-          <input type="email" id="input-consulta-email" >
+          <input type="email" id="input-consulta-email">
         </div>
 
         <div class="modal-botoes">
@@ -240,5 +256,3 @@
   <script src="script.js?v=20251022-accordion-email"></script>
 </body>
 </html>
-
-
