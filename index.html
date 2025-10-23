@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="style.css">
   <style>
     /* Estilos simples do dashboard */
-    .dash-toolbar { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+    .dash-toolbar { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
     .dash-table { width:100%; border-collapse: collapse; }
     .dash-table th, .dash-table td { border:1px solid var(--cinza-borda); padding:8px; font-size:14px; }
     .dash-table th { background:#f3f6f8; text-align:left; }
@@ -30,6 +30,15 @@
     @media (min-width: 900px){ .dash-grid{ grid-template-columns: 1fr 1fr; } }
     .number { text-align:right; white-space:nowrap; }
     .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef6ff; color:#0b5ed7; font-size:12px; }
+
+    /* Toggle Diário/Mensal */
+    .segmented { display:flex; border:1px solid var(--cinza-borda); border-radius:999px; overflow:hidden; }
+    .seg-btn { background:#fff; border:0; padding:6px 12px; font-size:14px; cursor:pointer; }
+    .seg-btn.active { background:#0b5ed7; color:#fff; }
+    .dash-inputs { display:flex; gap:8px; align-items:center; margin-left:6px; }
+
+    .hidden { display:none !important; }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 </head>
 
@@ -220,11 +229,23 @@
   <!-- Modal Dashboard -->
   <div id="modal-admin-dashboard" class="modal-overlay hidden" aria-hidden="true">
     <div class="modal-content" style="max-width:1000px" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-dashboard">
-      <h2 id="titulo-modal-dashboard">Dashboard — Resumo do Dia</h2>
+      <h2 id="titulo-modal-dashboard">Dashboard — Resumo</h2>
 
       <div class="dash-toolbar">
-        <label for="dash-select-date">Data:</label>
-        <input type="date" id="dash-select-date">
+        <label class="sr-only" for="dash-view">Visão:</label>
+        <div class="segmented" role="tablist" aria-label="Modo de visão">
+          <button id="dash-view-day"   role="tab" aria-selected="true"  class="seg-btn active">Diário</button>
+          <button id="dash-view-month" role="tab" aria-selected="false" class="seg-btn">Mensal</button>
+        </div>
+
+        <div class="dash-inputs">
+          <label for="dash-select-date">Data:</label>
+          <input type="date" id="dash-select-date">
+
+          <label for="dash-select-month" class="hidden">Mês:</label>
+          <input type="month" id="dash-select-month" class="hidden">
+        </div>
+
         <span id="dash-info" class="pill">—</span>
         <div style="flex:1"></div>
         <button id="btn-dash-close" class="btn-modal btn-cinza" type="button">Fechar</button>
@@ -253,6 +274,6 @@
   </div>
 
   <!-- atualize a versão se fizer novo deploy para forçar o refresh do navegador -->
-  <script src="script.js?v=20251022-accordion-email"></script>
+  <script src="script.js?v=20251023-mensal"></script>
 </body>
 </html>
