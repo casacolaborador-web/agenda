@@ -189,11 +189,13 @@ function initializeAccordions(){
 // ================== Admin adicionar helpers (definidos antes dos listeners que os usam) ==================
 function updateActivitySelector(prof){
   const rule=professionalRules[prof];
+  if (!adminSelectAtividade) return;
   adminSelectAtividade.innerHTML='<option value="" disabled selected>Selecione a Modalidade</option>';
   adminSelectAtividade.disabled=false;
   if(rule){ rule.activities.forEach(function(a){ const op=document.createElement('option'); op.value=a; op.textContent=a; adminSelectAtividade.appendChild(op); }); }
 }
 function renderQuickMassageGrid(){
+  if (!quickMassageHorariosGrid) return;
   quickMassageHorariosGrid.innerHTML='';
   quickMassageHours.forEach(function(h){
     const id='qm-' + h.replace(':','-');
@@ -205,14 +207,15 @@ function renderQuickMassageGrid(){
   });
 }
 function toggleAdminInputs(){
+  if (!adminSelectProfissional || !adminSelectAtividade) return;
   const prof=adminSelectProfissional.value;
   const atividade=adminSelectAtividade.value;
   const rule=professionalRules[prof];
 
-  quickMassageContainer.classList.add('hidden');
-  horarioUnicoContainer.classList.add('hidden');
-  vagasContainerUnico.classList.add('hidden');
-  btnConfirmarAdicionarFinal.disabled=true;
+  if (quickMassageContainer) quickMassageContainer.classList.add('hidden');
+  if (horarioUnicoContainer) horarioUnicoContainer.classList.add('hidden');
+  if (vagasContainerUnico) vagasContainerUnico.classList.add('hidden');
+  if (btnConfirmarAdicionarFinal) btnConfirmarAdicionarFinal.disabled=true;
 
   if(!prof||!atividade) return;
 
@@ -220,18 +223,19 @@ function toggleAdminInputs(){
   const isReiki = atividade==='Reiki';
   const isAula = rule && rule.type==='aula';
 
-  btnConfirmarAdicionarFinal.disabled=false;
+  if (btnConfirmarAdicionarFinal) btnConfirmarAdicionarFinal.disabled=false;
 
   if(isQuick){
-    quickMassageContainer.classList.remove('hidden');
+    if (quickMassageContainer) quickMassageContainer.classList.remove('hidden');
     renderQuickMassageGrid();
-    adminInputHorario.required=false; adminInputVagas.required=false;
+    if (adminInputHorario) adminInputHorario.required=false;
+    if (adminInputVagas) adminInputVagas.required=false;
   } else if (isAula || isReiki){
-    horarioUnicoContainer.classList.remove('hidden');
-    adminInputHorario.required=true;
-    const defaultVagas = isReiki ? 1 : rule.defaultVagas;
-    adminInputVagas.value = defaultVagas;
-    if(!isReiki){ vagasContainerUnico.classList.remove('hidden'); adminInputVagas.required=true; }
+    if (horarioUnicoContainer) horarioUnicoContainer.classList.remove('hidden');
+    if (adminInputHorario) adminInputHorario.required=true;
+    const defaultVagas = isReiki ? 1 : (rule ? rule.defaultVagas : 1);
+    if (adminInputVagas) adminInputVagas.value = defaultVagas;
+    if(!isReiki){ if (vagasContainerUnico) vagasContainerUnico.classList.remove('hidden'); if (adminInputVagas) adminInputVagas.required=true; }
   }
 }
 
@@ -243,18 +247,19 @@ async function carregarAgenda(){
   const dd=String(hoje.getDate()).padStart(2,'0');
   const dataPadrao=`${yyyy}-${mm}-${dd}`;
 
-  seletorData.min = `${yyyy}-${mm}-${dd}`;
+  if (seletorData) seletorData.min = `${yyyy}-${mm}-${dd}`;
   if (adminSelectData) adminSelectData.min = seletorData.min;
 
-  const dataSelecionada=seletorData.value||dataPadrao;
-  seletorData.value=dataSelecionada;
+  const dataSelecionada=(seletorData && seletorData.value) ? seletorData.value : dataPadrao;
+  if (seletorData) seletorData.value=dataSelecionada;
   atualizarDiaDaSemana(dataSelecionada);
   await renderizarAgendaParaData(dataSelecionada);
 }
 
 async function renderizarAgendaParaData(dataISO){
+  if (!container) return;
   container.innerHTML='<p class="loading">Carregando agenda...</p>';
-  const dataApi=dataISO.split('-').reverse().join('/');
+  const dataApi=(dataISO||'').split('-').reverse().join('/');
 
   try{
     const result = await getJSON(apiUrl, { action:'getSchedule', date:dataApi });
@@ -268,12 +273,12 @@ async function renderizarAgendaParaData(dataISO){
       initializeAccordions();
     } else {
       container.innerHTML = '<p class="alerta-erro">Erro ao carregar: ' + (result.message || 'Resposta inválida.') + '</p>';
-      menuAtividades.innerHTML = '';
+      if (menuAtividades) menuAtividades.innerHTML = '';
     }
   }catch(error){
     console.error('Erro de comunicação:', error);
     container.innerHTML = '<p class="alerta-erro">Falha ao carregar agenda: ' + error.message + '</p>';
-    menuAtividades.innerHTML = '';
+    if (menuAtividades) menuAtividades.innerHTML = '';
   }
 }
 
@@ -284,6 +289,7 @@ function getTodasAtividades(agendamentos){
   return Array.from(set).sort((a,b)=>a.localeCompare(b,'pt-BR'));
 }
 function construirMenuAtividades(agendamentos){
+  if (!menuAtividades) return;
   const atividades = getTodasAtividades(agendamentos);
   const dispPorAtividade = atividades.reduce((acc,atv)=>(acc[atv]=0,acc),{});
   agendamentos.forEach(s=>{
@@ -331,7 +337,7 @@ function criarHTMLAgendaFiltrada(agendamentos, atividadeFiltro){
         const vagasLivres = s.vagas_totais - s.reservas;
         const isQM = s.atividade.indexOf('Quick Massage') !== -1 || s.atividade.indexOf('Reiki') !== -1;
         const vagasTxt = isQM ? 'Vaga' : (vagasLivres + '/' + s.vagas_totais + ' Vagas');
-        const dataApi = seletorData.value.split('-').reverse().join('/');
+        const dataApi = (seletorData && seletorData.value) ? seletorData.value.split('-').reverse().join('/') : '';
         // X pequeno para excluir (visível apenas no modo admin)
         let btnExcluirHtml = '';
         if (isAdmin) {
@@ -359,7 +365,7 @@ function criarHTMLAgendaFiltrada(agendamentos, atividadeFiltro){
                 '<div class="prof-content">' +
                   '<div class="slots-grid">'+ grade + (isAdmin
                     ? ('<div class="slot-horario status-admin-adicionar" '+
-                       'data-data="'+seletorData.value.split('-').reverse().join('/')+'" '+
+                       'data-data="'+((seletorData && seletorData.value)?seletorData.value.split('-').reverse().join('/') : '')+'" '+
                        'data-profissional="'+prof+'" data-atividade="'+atividade+'">'+
                        '<span class="adicionar-label">+ Adicionar Slot</span></div>')
                     : '') +
@@ -384,52 +390,53 @@ function abrirModalReserva(dadosSlot){
     atividade: dadosSlot.atividade,
     profissional: dadosSlot.profissional
   };
-  modalDetalhes.innerHTML =
-    '<li><strong>Data:</strong> ' + agendamentoAtual.data + '</li>' +
-    '<li><strong>Horário:</strong> ' + agendamentoAtual.horario + '</li>' +
-    '<li><strong>Atividade:</strong> ' + agendamentoAtual.atividade + '</li>' +
-    '<li><strong>Profissional:</strong> ' + agendamentoAtual.profissional + '</li>';
-  inputMatricula.value=''; modalMensagem.textContent='';
+  if (modalDetalhes) {
+    modalDetalhes.innerHTML =
+      '<li><strong>Data:</strong> ' + agendamentoAtual.data + '</li>' +
+      '<li><strong>Horário:</strong> ' + agendamentoAtual.horario + '</li>' +
+      '<li><strong>Atividade:</strong> ' + agendamentoAtual.atividade + '</li>' +
+      '<li><strong>Profissional:</strong> ' + agendamentoAtual.profissional + '</li>';
+  }
+  if (inputMatricula) inputMatricula.value=''; if (modalMensagem) modalMensagem.textContent='';
   abrirModal(modalAgendamento);
 }
 
 async function confirmarAgendamento(){
+  if (!inputMatricula) return;
   const matricula=inputMatricula.value.trim();
   const email=(inputEmail?.value||'').trim();
-  if(!matricula){ modalMensagem.textContent='A matrícula é obrigatória.'; modalMensagem.style.color='red'; return; }
-  btnConfirmar.disabled=true;
-  modalMensagem.textContent='Processando...'; modalMensagem.style.color='var(--cinza-texto)';
+  if(!matricula){ if (modalMensagem){ modalMensagem.textContent='A matrícula é obrigatória.'; modalMensagem.style.color='red'; } return; }
+  if (btnConfirmar) btnConfirmar.disabled=true;
+  if (modalMensagem){ modalMensagem.textContent='Processando...'; modalMensagem.style.color='var(--cinza-texto)'; }
 
   try{
     const result = await postForm(apiUrl, { action:'bookSlot', id_linha: agendamentoAtual.idLinha, matricula, email });
-    modalMensagem.textContent=result.message || 'Reserva efetuada.'; modalMensagem.style.color='var(--verde-moinhos)';
+    if (modalMensagem){ modalMensagem.textContent=result.message || 'Reserva efetuada.'; modalMensagem.style.color='var(--verde-moinhos)'; }
     await carregarAgenda(); setTimeout(()=> fecharModal(modalAgendamento), 1200);
   }catch(err){
-    modalMensagem.textContent = err.message || 'Erro ao reservar.'; modalMensagem.style.color='red';
-  }finally{ btnConfirmar.disabled=false; }
+    if (modalMensagem){ modalMensagem.textContent = err.message || 'Erro ao reservar.'; modalMensagem.style.color='red'; }
+  }finally{ if (btnConfirmar) btnConfirmar.disabled=false; }
 }
 
 // ================== Admin – login/logout ==================
 function toggleAdminView(on){
   isAdmin = on;
   if(on){
-    btnAdminLogin.textContent='Logout Admin';
-    btnAdminLogin.classList.remove('btn-cinza'); btnAdminLogin.classList.add('btn-vermelho');
-    btnGerenciarAgenda.classList.remove('hidden');
-    if(!document.querySelector('.aviso-admin')){
+    if (btnAdminLogin) { btnAdminLogin.textContent='Logout Admin'; btnAdminLogin.classList.remove('btn-cinza'); btnAdminLogin.classList.add('btn-vermelho'); }
+    if (btnGerenciarAgenda) btnGerenciarAgenda.classList.remove('hidden');
+    if(!document.querySelector('.aviso-admin') && container){
       container.insertAdjacentHTML('beforebegin','<p class="aviso-admin">MODO ADMIN. Clique em "×" para remover slots.</p>');
     }
   }else{
-    btnAdminLogin.textContent='Login Admin';
-    btnAdminLogin.classList.remove('btn-vermelho'); btnAdminLogin.classList.add('btn-cinza');
-    btnGerenciarAgenda.classList.add('hidden');
+    if (btnAdminLogin) { btnAdminLogin.textContent='Login Admin'; btnAdminLogin.classList.remove('btn-vermelho'); btnAdminLogin.classList.add('btn-cinza'); }
+    if (btnGerenciarAgenda) btnGerenciarAgenda.classList.add('hidden');
     const aviso=document.querySelector('.aviso-admin'); if(aviso) aviso.remove();
   }
-  container.innerHTML = criarHTMLAgendaFiltrada(todosOsAgendamentos, atividadeSelecionada);
+  if (container) container.innerHTML = criarHTMLAgendaFiltrada(todosOsAgendamentos, atividadeSelecionada);
   initializeAccordions();
 }
-function handleAdminLoginClick(){ if(isAdmin){toggleAdminView(false);return;} abrirModal(modalAdminLogin); inputAdminPassword.value=''; adminLoginMensagem.textContent=''; }
-function confirmarAdminLogin(){ if(inputAdminPassword.value.trim()===ADMIN_PASSWORD){ toggleAdminView(true); fecharModal(modalAdminLogin); } else { adminLoginMensagem.textContent='Senha incorreta.'; adminLoginMensagem.style.color='red'; } }
+function handleAdminLoginClick(){ if(isAdmin){toggleAdminView(false);return;} abrirModal(modalAdminLogin); if (inputAdminPassword) inputAdminPassword.value=''; if (adminLoginMensagem) adminLoginMensagem.textContent=''; }
+function confirmarAdminLogin(){ if(inputAdminPassword && inputAdminPassword.value.trim()===ADMIN_PASSWORD){ toggleAdminView(true); fecharModal(modalAdminLogin); } else { if (adminLoginMensagem){ adminLoginMensagem.textContent='Senha incorreta.'; adminLoginMensagem.style.color='red'; } } }
 
 // ================== Admin – excluir ==================
 async function handleAdminDelete(idLinha){
@@ -447,35 +454,33 @@ async function handleAdminDelete(idLinha){
 }
 
 // ================== Admin – adicionar ==================
-formAdicionarHorario && formAdicionarHorario.addEventListener('keydown', e=>{ if (e.key === 'Enter') e.preventDefault(); });
+if (formAdicionarHorario) formAdicionarHorario.addEventListener('keydown', e=>{ if (e.key === 'Enter') e.preventDefault(); });
 
 async function handleAdminAdicionar(e){
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   if (isSubmittingAdmin) return;
   isSubmittingAdmin = true;
 
-  const data = adminSelectData.value.split('-').reverse().join('/'); // DD/MM/AAAA
-  const profissional = adminSelectProfissional.value;
-  const atividade = adminSelectAtividade.value;
+  const data = (adminSelectData && adminSelectData.value) ? adminSelectData.value.split('-').reverse().join('/') : '';
+  const profissional = adminSelectProfissional ? adminSelectProfissional.value : '';
+  const atividade = adminSelectAtividade ? adminSelectAtividade.value : '';
   let horariosParaEnviar = [];
 
-  if (btnConfirmarAdicionarFinal) {
-    btnConfirmarAdicionarFinal.disabled=true;
-  }
+  if (btnConfirmarAdicionarFinal) btnConfirmarAdicionarFinal.disabled=true;
   if (adminAddMensagem) { adminAddMensagem.textContent='Enviando dados...'; adminAddMensagem.style.color='var(--cinza-texto)'; }
 
-  if(atividade==='Quick Massage'){
+  if(atividade==='Quick Massage' && quickMassageHorariosGrid){
     const cbs = quickMassageHorariosGrid.querySelectorAll('.qm-checkbox');
     cbs.forEach(cb=>{ if(cb.checked){ horariosParaEnviar.push({ Horario: cb.dataset.horario, Vagas: 1, Reserva: '' }); } });
   } else {
-    const norm = padHora(adminInputHorario.value);
+    const norm = adminInputHorario ? padHora(adminInputHorario.value) : '';
     if(!norm){
       if (adminAddMensagem){ adminAddMensagem.textContent='Horário inválido. Use o formato HH:MM (ex.: 08:30).'; adminAddMensagem.style.color='red'; }
       if (btnConfirmarAdicionarFinal) btnConfirmarAdicionarFinal.disabled=false;
       isSubmittingAdmin = false; return;
     }
-    adminInputHorario.value = norm;
-    let vagas = parseInt(adminInputVagas.value.trim(),10);
+    if (adminInputHorario) adminInputHorario.value = norm;
+    let vagas = adminInputVagas ? parseInt(adminInputVagas.value.trim(),10) : 1;
     if(atividade==='Reiki') vagas = 1;
     if(isNaN(vagas) || vagas<1){
       if (adminAddMensagem){ adminAddMensagem.textContent='Preencha Vagas com um número válido (>=1).'; adminAddMensagem.style.color='red'; }
@@ -494,7 +499,7 @@ async function handleAdminAdicionar(e){
   try{
     const result = await postForm(apiUrl, { action:'addMultiple', data, profissional, atividade, horariosJson: JSON.stringify(horariosParaEnviar) });
     if (adminAddMensagem){ adminAddMensagem.textContent=result.message; adminAddMensagem.style.color='var(--verde-moinhos)'; }
-    await renderizarAgendaParaData(seletorData.value);
+    await renderizarAgendaParaData(seletorData ? seletorData.value : '');
     setTimeout(()=> fecharModal(modalAdminAdicionar), 1000);
   }catch(err){
     console.error('Erro ao adicionar agendamento:', err);
@@ -507,27 +512,28 @@ async function handleAdminAdicionar(e){
 
 // ================== Consulta – minhas reservas ==================
 async function handleBuscarReservas(){
+  if (!inputConsultaMatricula) return;
   const matricula=inputConsultaMatricula.value.trim();
-  if(!matricula){ consultaMensagem.textContent='Informe sua matrícula.'; consultaMensagem.style.color='red'; return; }
-  consultaMensagem.textContent='Buscando...'; consultaMensagem.style.color='var(--cinza-texto)';
-  listaAgendamentos.innerHTML='';
+  if(!matricula){ if (consultaMensagem){ consultaMensagem.textContent='Informe sua matrícula.'; consultaMensagem.style.color='red'; } return; }
+  if (consultaMensagem){ consultaMensagem.textContent='Buscando...'; consultaMensagem.style.color='var(--cinza-texto)'; }
+  if (listaAgendamentos) listaAgendamentos.innerHTML='';
 
   try{
     const url = withQuery(apiUrl, { action:'getMyBookings', matricula });
     const resp = await fetch(url);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const result = await resp.json();
-    consultaMensagem.textContent='';
-    consultaViewInicial.classList.add('hidden');
-    consultaViewResultados.classList.remove('hidden');
+    if (consultaMensagem) consultaMensagem.textContent='';
+    if (consultaViewInicial) consultaViewInicial.classList.add('hidden');
+    if (consultaViewResultados) consultaViewResultados.classList.remove('hidden');
 
     if(result.status==='success'){
-      listaAgendamentos.innerHTML = renderizarReservas(result.data, matricula);
+      if (listaAgendamentos) listaAgendamentos.innerHTML = renderizarReservas(result.data, matricula);
     } else {
-      listaAgendamentos.innerHTML = '<p style="text-align:center;color:red;">' + (result.message || 'Erro ao buscar.') + '</p>';
+      if (listaAgendamentos) listaAgendamentos.innerHTML = '<p style="text-align:center;color:red;">' + (result.message || 'Erro ao buscar.') + '</p>';
     }
   }catch(err){
-    consultaMensagem.textContent='Erro ao buscar: ' + err.message; consultaMensagem.style.color='red';
+    if (consultaMensagem) { consultaMensagem.textContent='Erro ao buscar: ' + err.message; consultaMensagem.style.color='red'; }
   }
 }
 function renderizarReservas(reservas, matricula){
@@ -561,11 +567,12 @@ async function handleCancelBooking(event){
   }catch(err){ alert('Erro ao cancelar: ' + err.message); }
   finally{ t.disabled=false; t.textContent='Cancelar'; }
 }
-function voltarConsulta(){ consultaViewInicial.classList.remove('hidden'); consultaViewResultados.classList.add('hidden'); consultaMensagem.textContent=''; }
+function voltarConsulta(){ if (consultaViewInicial) consultaViewInicial.classList.remove('hidden'); if (consultaViewResultados) consultaViewResultados.classList.add('hidden'); if (consultaMensagem) consultaMensagem.textContent=''; }
 
-// ================== Dashboard / utilidades (mantidas) ==================
+// ================== Funções auxiliares para o DASHBOARD ==================
 function formatNum(n){ return (n||0).toLocaleString('pt-BR'); }
-function buildTable(headers, rows, footer){ /* ... mesma implementação anterior ... */ 
+
+function buildTable(headers, rows, footer){
   let html = '<table class="dash-table"><thead><tr>';
   headers.forEach(h=> html += '<th>' + h + '</th>');
   html += '</tr></thead><tbody>';
@@ -587,9 +594,20 @@ function buildTable(headers, rows, footer){ /* ... mesma implementação anterio
   html += '</table>';
   return html;
 }
-function toISODate(d){ const z = (n)=> String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`; }
-function monthRange(yyyyMM){ const [y, m] = yyyyMM.split('-').map(n => parseInt(n, 10)); const start = new Date(y, m - 1, 1); const end = new Date(y, m, 0); return { start, end }; }
-async function fetchAgendaBetween(startISO, endISO){ /* ... mesma implementação ... */ 
+
+function toISODate(d){
+  const z = (n)=> String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+}
+function monthRange(yyyyMM){
+  const [y, m] = yyyyMM.split('-').map(n => parseInt(n, 10));
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0);
+  return { start, end };
+}
+
+// Busca dados da API entre duas datas ISO (YYYY-MM-DD) inclusive
+async function fetchAgendaBetween(startISO, endISO){
   const start = new Date(startISO);
   const end   = new Date(endISO);
   const items = [];
@@ -607,7 +625,8 @@ async function fetchAgendaBetween(startISO, endISO){ /* ... mesma implementaçã
   }
   return items;
 }
-function agregaResumo(slots){ /* ... mesma implementação ... */ 
+
+function agregaResumo(slots){
   const byAtv = {}, byProf = {}, byAP = {};
   slots.forEach(s=>{
     const keyAtv = s.atividade, keyProf = s.profissional, keyAP = keyAtv + '|' + keyProf;
@@ -637,56 +656,172 @@ function agregaResumo(slots){ /* ... mesma implementação ... */
   return { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp, profTot, profRes, profDisp };
 }
 
-async function atualizarDashboard(){ /* ... mesma implementação ... */ 
+async function atualizarDashboard(){
   if (dashView === 'day') {
-    const dataISO = dashSelectDate.value;
-    if(!dataISO){ dashActivityTable.innerHTML=''; dashProfTable.innerHTML=''; dashAPTable.innerHTML=''; dashInfo.textContent='—'; return; }
+    const dataISO = dashSelectDate ? dashSelectDate.value : null;
+    if(!dataISO){ if (dashActivityTable) dashActivityTable.innerHTML=''; if (dashProfTable) dashProfTable.innerHTML=''; if (dashAPTable) dashAPTable.innerHTML=''; if (dashInfo) dashInfo.textContent='—'; return; }
     const dataBR = dataISO.split('-').reverse().join('/');
     const slotsDia = todosOsAgendamentos.filter(s=> s.data === dataBR).filter(isElegivel);
 
     const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp, profTot, profRes, profDisp } = agregaResumo(slotsDia);
 
-    dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
-    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf, ['TOTAL', formatNum(profTot), formatNum(profRes), formatNum(profDisp)]);
-    dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
+    if (dashActivityTable) dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
+    if (dashProfTable) dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf, ['TOTAL', formatNum(profTot), formatNum(profRes), formatNum(profDisp)]);
+    if (dashAPTable) dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
 
     const label = new Intl.DateTimeFormat('pt-BR', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' }).format(new Date(dataISO));
-    dashInfo.textContent = `Dia: ${label} • Total: ${formatNum(sumTot)} • Reservas: ${formatNum(sumRes)} • Disponíveis: ${formatNum(sumDisp)}`;
+    if (dashInfo) dashInfo.textContent = `Dia: ${label} • Total: ${formatNum(sumTot)} • Reservas: ${formatNum(sumRes)} • Disponíveis: ${formatNum(sumDisp)}`;
   } else {
-    const yM = dashSelectMonth.value;
-    if(!yM){ dashActivityTable.innerHTML=''; dashProfTable.innerHTML=''; dashAPTable.innerHTML=''; dashInfo.textContent='—'; return; }
+    const yM = dashSelectMonth ? dashSelectMonth.value : null;
+    if(!yM){ if (dashActivityTable) dashActivityTable.innerHTML=''; if (dashProfTable) dashProfTable.innerHTML=''; if (dashAPTable) dashAPTable.innerHTML=''; if (dashInfo) dashInfo.textContent='—'; return; }
     const { start, end } = monthRange(yM);
 
-    dashInfo.textContent = 'Mês: carregando...';
+    if (dashInfo) dashInfo.textContent = 'Mês: carregando...';
     const items = await fetchAgendaBetween(toISODate(start), toISODate(end));
     const { rowsAtv, rowsProf, rowsAP, sumTot, sumRes, sumDisp, profTot, profRes, profDisp } = agregaResumo(items);
 
-    dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
-    dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf, ['TOTAL', formatNum(profTot), formatNum(profRes), formatNum(profDisp)]);
-    dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
+    if (dashActivityTable) dashActivityTable.innerHTML = buildTable(['Atividade','Total','Reservas','Disponíveis'], rowsAtv);
+    if (dashProfTable) dashProfTable.innerHTML     = buildTable(['Profissional','Total','Reservas','Disponíveis'], rowsProf, ['TOTAL', formatNum(profTot), formatNum(profRes), formatNum(profDisp)]);
+    if (dashAPTable) dashAPTable.innerHTML       = buildTable(['Atividade × Profissional','Total','Reservas','Disponíveis'], rowsAP);
 
     const label = new Intl.DateTimeFormat('pt-BR', { month:'long', year:'numeric' }).format(start);
-    dashInfo.textContent = `Mês: ${label} • Total: ${formatNum(sumTot)} • Reservas: ${formatNum(sumRes)} • Disponíveis: ${formatNum(sumDisp)}`;
+    if (dashInfo) dashInfo.textContent = `Mês: ${label} • Total: ${formatNum(sumTot)} • Reservas: ${formatNum(sumRes)} • Disponíveis: ${formatNum(sumDisp)}`;
   }
 }
 
-// ================== Listeners (registros feitos depois das funções) ==================
-seletorData && seletorData.addEventListener('change', function(){ atividadeSelecionada='TODAS'; carregarAgenda(); });
-btnCancelar && btnCancelar.addEventListener('click', function(){ fecharModal(modalAgendamento); });
-btnConfirmar && btnConfirmar.addEventListener('click', confirmarAgendamento);
+// Alterna UI e dispara atualização
+function setDashView(next){
+  dashView = next;
+  if (dashView === 'day') {
+    if (dashViewDayBtn) { dashViewDayBtn.classList.add('active'); dashViewDayBtn.setAttribute('aria-selected','true'); }
+    if (dashViewMonthBtn) { dashViewMonthBtn.classList.remove('active'); dashViewMonthBtn.setAttribute('aria-selected','false'); }
 
-btnAdminLogin && btnAdminLogin.addEventListener('click', handleAdminLoginClick);
-document.getElementById('btn-cancelar-admin-login') && document.getElementById('btn-cancelar-admin-login').addEventListener('click', function(){ fecharModal(modalAdminLogin); });
-document.getElementById('btn-confirmar-admin-login') && document.getElementById('btn-confirmar-admin-login').addEventListener('click', confirmarAdminLogin);
-btnGerenciarAgenda && btnGerenciarAgenda.addEventListener('click', function(){ abrirModal(modalAdminGerenciar); });
-btnFecharAdminGerenciar && btnFecharAdminGerenciar.addEventListener('click', function(){ fecharModal(modalAdminGerenciar); });
-btnAdminLogout && btnAdminLogout.addEventListener('click', function(){ fecharModal(modalAdminGerenciar); toggleAdminView(false); });
-btnAdminDashboard && btnAdminDashboard.addEventListener('click', function(){ fecharModal(modalAdminGerenciar); openDashboard(); });
+    if (dashSelectDate) dashSelectDate.classList.remove('hidden');
+    if (dashSelectDate && dashSelectDate.previousElementSibling) dashSelectDate.previousElementSibling.classList.remove('hidden'); // label Data
+    if (dashSelectMonth) dashSelectMonth.classList.add('hidden');
+    if (dashSelectMonth && dashSelectMonth.previousElementSibling) dashSelectMonth.previousElementSibling.classList.add('hidden');   // label Mês
 
-adminSelectProfissional && adminSelectProfissional.addEventListener('change', function(e){ updateActivitySelector(e.target.value); toggleAdminInputs(); });
-adminSelectAtividade && adminSelectAtividade.addEventListener('change', toggleAdminInputs);
+    if (dashSelectDate && !dashSelectDate.value) dashSelectDate.value = toISODate(new Date());
+  } else {
+    if (dashViewMonthBtn) { dashViewMonthBtn.classList.add('active'); dashViewMonthBtn.setAttribute('aria-selected','true'); }
+    if (dashViewDayBtn) { dashViewDayBtn.classList.remove('active'); dashViewDayBtn.setAttribute('aria-selected','false'); }
 
-btnAdminAdicionar && btnAdminAdicionar.addEventListener('click', function(){
+    if (dashSelectMonth) dashSelectMonth.classList.remove('hidden');
+    if (dashSelectMonth && dashSelectMonth.previousElementSibling) dashSelectMonth.previousElementSibling.classList.remove('hidden'); // label Mês
+    if (dashSelectDate) dashSelectDate.classList.add('hidden');
+    if (dashSelectDate && dashSelectDate.previousElementSibling) dashSelectDate.previousElementSibling.classList.add('hidden');     // label Data
+
+    if (dashSelectMonth && !dashSelectMonth.value) {
+      const d = new Date();
+      dashSelectMonth.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    }
+  }
+  atualizarDashboard();
+}
+
+// Abre modal já com valores padrão
+function openDashboard(){
+  if (dashSelectDate) dashSelectDate.value = (seletorData && seletorData.value) ? seletorData.value : toISODate(new Date());
+  setDashView('day'); // inicia no diário
+  abrirModal(modalAdminDashboard);
+}
+
+/* ================== EXPORTAÇÃO CSV (Excel) ================== */
+// Converte uma tabela HTML (em string) para CSV (pt-BR usa ; como separador no Excel)
+function tableHTMLToCSV(html, title){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html.trim();
+  const table = tmp.querySelector('table');
+  if(!table) return '';
+
+  const sep = ';';
+  const lines = [];
+
+  // título opcional
+  if (title) lines.push(`"${title}"`);
+
+  // header
+  const ths = Array.from(table.querySelectorAll('thead th')).map(th => `"${th.textContent.replace(/"/g,'""')}"`);
+  if (ths.length) lines.push(ths.join(sep));
+
+  // body
+  Array.from(table.querySelectorAll('tbody tr')).forEach(tr=>{
+    const tds = Array.from(tr.querySelectorAll('td')).map(td => {
+      const txt = td.textContent.replace(/\u00A0/g,' ').trim();
+      return `"${txt.replace(/"/g,'""')}"`;
+    });
+    lines.push(tds.join(sep));
+  });
+
+  // footer (se existir)
+  const tfoot = table.querySelector('tfoot');
+  if (tfoot){
+    const fds = Array.from(tfoot.querySelectorAll('td')).map(td => `"${td.textContent.replace(/"/g,'""')}"`);
+    lines.push(fds.join(sep));
+  }
+
+  return lines.join('\r\n') + '\r\n';
+}
+
+function downloadCSV(filename, csvString){
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function nomeBaseArquivo(){
+  if (dashView === 'day'){
+    const d = dashSelectDate ? dashSelectDate.value || toISODate(new Date()) : toISODate(new Date());
+    return `dashboard-dia-${d}`;
+  } else {
+    const m = dashSelectMonth ? dashSelectMonth.value : '';
+    return `dashboard-mes-${m}`;
+  }
+}
+
+function exportarDashboard(){
+  const base = nomeBaseArquivo();
+
+  const csvAtv  = dashActivityTable ? tableHTMLToCSV(dashActivityTable.innerHTML, 'Resumo por Atividade') : '';
+  const csvProf = dashProfTable ? tableHTMLToCSV(dashProfTable.innerHTML,     'Resumo por Profissional') : '';
+  const csvAP   = dashAPTable ? tableHTMLToCSV(dashAPTable.innerHTML,       'Atividade × Profissional') : '';
+
+  if (!csvAtv && !csvProf && !csvAP){
+    alert('Não há dados para exportar.');
+    return;
+  }
+
+  // Dispara três downloads — o Excel abre normalmente .csv
+  if (csvAtv)  downloadCSV(`${base}-atividade.csv`, csvAtv);
+  if (csvProf) downloadCSV(`${base}-profissional.csv`, csvProf);
+  if (csvAP)   downloadCSV(`${base}-atividade-profissional.csv`, csvAP);
+}
+
+// ================== Listeners ==================
+if (seletorData) seletorData.addEventListener('change', function(){ atividadeSelecionada='TODAS'; carregarAgenda(); });
+if (btnCancelar) btnCancelar.addEventListener('click', function(){ fecharModal(modalAgendamento); });
+if (btnConfirmar) btnConfirmar.addEventListener('click', confirmarAgendamento);
+
+if (btnAdminLogin) btnAdminLogin.addEventListener('click', handleAdminLoginClick);
+const btnCancelAdmin = document.getElementById('btn-cancelar-admin-login');
+if (btnCancelAdmin) btnCancelAdmin.addEventListener('click', function(){ fecharModal(modalAdminLogin); });
+const btnConfirmAdmin = document.getElementById('btn-confirmar-admin-login');
+if (btnConfirmAdmin) btnConfirmAdmin.addEventListener('click', confirmarAdminLogin);
+if (btnGerenciarAgenda) btnGerenciarAgenda.addEventListener('click', function(){ abrirModal(modalAdminGerenciar); });
+if (btnFecharAdminGerenciar) btnFecharAdminGerenciar.addEventListener('click', function(){ fecharModal(modalAdminGerenciar); });
+if (btnAdminLogout) btnAdminLogout.addEventListener('click', function(){ fecharModal(modalAdminGerenciar); toggleAdminView(false); });
+if (btnAdminDashboard) btnAdminDashboard.addEventListener('click', function(){ fecharModal(modalAdminGerenciar); openDashboard(); });
+
+if (adminSelectProfissional) adminSelectProfissional.addEventListener('change', function(e){ updateActivitySelector(e.target.value); toggleAdminInputs(); });
+if (adminSelectAtividade) adminSelectAtividade.addEventListener('change', toggleAdminInputs);
+
+if (btnAdminAdicionar) btnAdminAdicionar.addEventListener('click', function(){
   if (formAdicionarHorario) formAdicionarHorario.reset();
   if (adminSelectAtividade) adminSelectAtividade.disabled=true;
   toggleAdminInputs();
@@ -694,21 +829,21 @@ btnAdminAdicionar && btnAdminAdicionar.addEventListener('click', function(){
   fecharModal(modalAdminGerenciar);
   abrirModal(modalAdminAdicionar);
 });
-btnCancelarAdicionarFinal && btnCancelarAdicionarFinal.addEventListener('click', function(){ fecharModal(modalAdminAdicionar); });
-formAdicionarHorario && formAdicionarHorario.addEventListener('submit', handleAdminAdicionar);
+if (btnCancelarAdicionarFinal) btnCancelarAdicionarFinal.addEventListener('click', function(){ fecharModal(modalAdminAdicionar); });
+if (formAdicionarHorario) formAdicionarHorario.addEventListener('submit', handleAdminAdicionar);
 
-btnConsultarReservas && btnConsultarReservas.addEventListener('click', function(){ voltarConsulta(); abrirModal(modalConsulta); });
-btnFecharConsulta && btnFecharConsulta.addEventListener('click', function(){ fecharModal(modalConsulta); });
-btnBuscarReservas && btnBuscarReservas.addEventListener('click', handleBuscarReservas);
-btnVoltarConsulta && btnVoltarConsulta.addEventListener('click', voltarConsulta);
-modalConsulta && modalConsulta.addEventListener('click', handleCancelBooking);
+if (btnConsultarReservas) btnConsultarReservas.addEventListener('click', function(){ voltarConsulta(); abrirModal(modalConsulta); });
+if (btnFecharConsulta) btnFecharConsulta.addEventListener('click', function(){ fecharModal(modalConsulta); });
+if (btnBuscarReservas) btnBuscarReservas.addEventListener('click', handleBuscarReservas);
+if (btnVoltarConsulta) btnVoltarConsulta.addEventListener('click', voltarConsulta);
+if (modalConsulta) modalConsulta.addEventListener('click', handleCancelBooking);
 
 // Delegação de cliques: acordeões e slots
-container && container.addEventListener('click', function(ev){
+if (container) container.addEventListener('click', function(ev){
   const atvTitle = ev.target.closest('.titulo-atividade');
   if (atvTitle){
     atvTitle.classList.toggle('ativo');
-    const panel = atvTitle.nextElementSibling;
+    const panel = atvTitle.nextElementSibling; // .atividade-content
     if (!panel) return;
     if (panel.classList.contains('open')) collapsePanel(panel); else expandPanel(panel);
     return;
@@ -716,7 +851,7 @@ container && container.addEventListener('click', function(ev){
   const profTitle = ev.target.closest('.titulo-profissional');
   if (profTitle){
     profTitle.classList.toggle('ativo');
-    const panel = profTitle.nextElementSibling;
+    const panel = profTitle.nextElementSibling; // .prof-content
     if (!panel) return;
     if (panel.classList.contains('open')) collapsePanel(panel); else expandPanel(panel);
     return;
@@ -737,10 +872,10 @@ container && container.addEventListener('click', function(ev){
   // admin atalho adicionar
   if (isAdmin && el && el.classList.contains('status-admin-adicionar')){
     const d=el.dataset;
-    adminSelectData.value = d.data.split('/').reverse().join('-');
-    adminSelectProfissional.value = d.profissional;
+    if (adminSelectData) adminSelectData.value = d.data.split('/').reverse().join('-');
+    if (adminSelectProfissional) adminSelectProfissional.value = d.profissional;
     updateActivitySelector(d.profissional);
-    adminSelectAtividade.value = d.atividade;
+    if (adminSelectAtividade) adminSelectAtividade.value = d.atividade;
     toggleAdminInputs();
     fecharModal(modalAdminGerenciar);
     abrirModal(modalAdminAdicionar);
@@ -748,24 +883,24 @@ container && container.addEventListener('click', function(ev){
 });
 
 // clique no menu de atividades
-menuAtividades && menuAtividades.addEventListener('click', function(e){
+if (menuAtividades) menuAtividades.addEventListener('click', function(e){
   const btn = e.target.closest('.chip-atividade');
   if(!btn) return;
   atividadeSelecionada = btn.getAttribute('data-atividade') || 'TODAS';
   var chips = menuAtividades.querySelectorAll('.chip-atividade');
   for (var i=0;i<chips.length;i++){ chips[i].classList.remove('ativo'); }
   btn.classList.add('ativo');
-  container.innerHTML = criarHTMLAgendaFiltrada(todosOsAgendamentos, atividadeSelecionada);
+  if (container) container.innerHTML = criarHTMLAgendaFiltrada(todosOsAgendamentos, atividadeSelecionada);
   initializeAccordions();
 });
 
 // Dashboard handlers
-btnDashClose && btnDashClose.addEventListener('click', function(){ fecharModal(modalAdminDashboard); });
-dashSelectDate && dashSelectDate.addEventListener('change', atualizarDashboard);
-dashSelectMonth && dashSelectMonth.addEventListener('change', atualizarDashboard);
-dashViewDayBtn && dashViewDayBtn.addEventListener('click', ()=> setDashView('day'));
-dashViewMonthBtn && dashViewMonthBtn.addEventListener('click', ()=> setDashView('month'));
-btnDashExport && btnDashExport.addEventListener('click', exportarDashboard);
+if (btnDashClose) btnDashClose.addEventListener('click', function(){ fecharModal(modalAdminDashboard); });
+if (dashSelectDate) dashSelectDate.addEventListener('change', atualizarDashboard);
+if (dashSelectMonth) dashSelectMonth.addEventListener('change', atualizarDashboard);
+if (dashViewDayBtn) dashViewDayBtn.addEventListener('click', ()=> setDashView('day'));
+if (dashViewMonthBtn) dashViewMonthBtn.addEventListener('click', ()=> setDashView('month'));
+if (btnDashExport) btnDashExport.addEventListener('click', exportarDashboard);
 
-// Start
+// ================== Start ==================
 carregarAgenda();
