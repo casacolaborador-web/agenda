@@ -370,3 +370,23 @@ header{
   .btn-admin-excluir { top:4px; right:4px; padding:3px 6px; font-size:11px; }
 }
 
+:root{
+  --cinza-borda: #e6eef6;
+  --cinza-texto: #6c757d;
+  --verde-moinhos: #1b8a4a;
+}
+
+/* Botões básicos (utilizados pela UI) */
+.btn-acao { padding:8px 12px; border-radius:6px; border:0; cursor:pointer; font-weight:600; }
+.btn-cinza { background:#f3f4f6; color:#111827; }
+.btn-azul  { background:#0b5ed7; color:#fff; }
+.btn-vermelho { background:#dc3545; color:#fff; }
+
+.btn-modal { padding:8px 12px; border-radius:6px; border:0; cursor:pointer; margin:4px; }
+.btn-modal.btn-cinza { background:#f3f6f8; }
+.btn-modal.btn-azul  { background:#0b5ed7; color:#fff; }
+.btn-modal.btn-vermelho { background:#e04b4b; color:#fff; }
+
+/* Chips de atividade */
+.chip-atividade { padding:6px 10px; border-radius:999px;
+
