@@ -478,3 +478,74 @@ header{
   .btn-admin-excluir { top:4px; right:4px; width:20px; height:20px; font-size:12px; }
 }
 
+/* --- Estilos do Pop-up de Natal --- */
+
+.modal-overlay { /* Reutilizando a classe existente para o fundo */
+    display: none; 
+    position: fixed; 
+    z-index: 9999; /* Z-index alto para garantir que fique por cima de tudo */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.7); 
+}
+
+/* Ajustes para o conteúdo do Pop-up de Natal */
+#popupNatal .modal-content {
+    background-color: #fefefe;
+    margin: 10% auto; 
+    padding: 10px; /* Reduzido para dar destaque à imagem */
+    width: 90%; 
+    max-width: 600px; /* Ajuste o tamanho máximo da sua imagem */
+    position: relative; 
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    /* Adicione um toque festivo, se desejar */
+    border: 3px solid #C90000; /* Vermelho natalino */
+}
+
+/* Imagem dentro do Pop-up */
+.imagem-popup-natal {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 5px;
+}
+
+/* Botão de Fechar no Canto Superior Direito */
+.fechar-btn {
+    color: #C90000; /* Cor festiva para o X */
+    font-size: 36px;
+    font-weight: bold;
+    position: absolute; 
+    top: 0px; /* Mais perto do topo */
+    right: 10px; /* Mais perto da direita */
+    cursor: pointer;
+    background-color: white;
+    padding: 0 10px 0 10px;
+    border-radius: 50%;
+    line-height: 1;
+    z-index: 10000; /* Acima da imagem */
+    border: 1px solid #C90000;
+}
+
+.fechar-btn:hover,
+.fechar-btn:focus {
+    color: #000;
+    text-decoration: none;
+    opacity: 0.8;
+}
+
+.sr-only { /* Acessibilidade: Oculta o título, mas o mantém para leitores de tela */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
