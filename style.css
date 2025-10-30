@@ -259,7 +259,7 @@ header{
 /* Animação personagem (corrigido parêntese extra) */
 .personagem-container{ position:relative; width:100%; height:100px; overflow:hidden }
 .personagens-loop{
-  height:100%; width:200vw; background:url('img/personagem-casa.png') repeat-x 0 10px/auto 80px;
+  height:100%; width:200vw; background:url('img/personagens-casa-natal.png') repeat-x 0 10px/auto 80px;
   transform:scaleX(-1); animation:rolarFundo 30s linear infinite;
 }
 @keyframes rolarFundo{ from{ background-position-x:0 } to{ background-position-x:-1920px } }
@@ -549,3 +549,4 @@ header{
     white-space: nowrap;
     border-width: 0;
 }
+
