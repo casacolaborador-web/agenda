@@ -1,10 +1,10 @@
 /* --- Identidade Visual Moinhos de Vento --- */
 :root{
   --azul-moinhos:#004b84;
-  --verde-moinhos:#00a99d;
+  --verde-moinhos:#1b8a4a; /* Consolidado para o valor mais recente (1b8a4a) */
   --cinza-claro:#f8f9fa;
-  --cinza-texto:#495057;
-  --cinza-borda:#dee2e6;
+  --cinza-texto:#6c757d; /* Consolidado para o valor mais recente (6c757d) */
+  --cinza-borda:#e6eef6; /* Consolidado para o valor mais recente (e6eef6) */
 
   /* Tipografia fluida (mobile-first) */
   --fs-100: clamp(14px, 1.2vw, 16px);
@@ -75,16 +75,21 @@ header{
 .dia-semana-label{ font-weight:700; color:var(--azul-moinhos); text-transform:capitalize }
 
 /* Botões */
-.btn-acao,.btn-modal{
-  padding:12px 16px; border:none; border-radius:var(--radius-8); font-weight:700; cursor:pointer;
-  transition:opacity .18s, transform .06s; will-change:transform;
-  min-height:44px; /* hit-area mobile */
+.btn-acao{
+  padding:8px 12px; border-radius:6px; border:0; cursor:pointer; font-weight:600;
+  transition:opacity .18s, transform .06s; will-change:transform; min-height:44px;
+}
+.btn-modal{
+  padding:8px 12px; border-radius:6px; border:0; cursor:pointer; margin:4px;
+  transition:opacity .18s, transform .06s; will-change:transform; min-height:34px;
 }
 .btn-acao:active,.btn-modal:active{ transform:scale(.98) }
-.btn-azul{ background:var(--azul-moinhos); color:#fff }
-.btn-cinza{ background:#6c757d; color:#fff }
-.btn-vermelho{ background:#dc3545; color:#fff }
+.btn-azul{ background:#0b5ed7; color:#fff } /* Valor final */
+.btn-cinza{ background:#f3f4f6; color:#111827 } /* Valor final */
+.btn-vermelho{ background:#dc3545; color:#fff } /* Valor final */
 .btn-verde{ background:var(--verde-moinhos); color:#fff }
+.btn-modal.btn-cinza { background:#f3f6f8; color:#111827 } /* Valor final */
+.btn-modal.btn-vermelho { background:#e04b4b; color:#fff } /* Valor final */
 .btn-modal:hover,.btn-acao:hover{ opacity:.92 }
 .btn-acao:focus-visible,.btn-modal:focus-visible{ outline:none; box-shadow: var(--focus-ring) }
 
@@ -104,14 +109,18 @@ header{
 }
 .menu-atividades .chip-atividade{ scroll-snap-align:start }
 .chip-atividade{
-  padding:.55rem 1rem; border:1px solid #d0d7de; border-radius:999px; background:#fff; color:#111;
+  padding:6px 10px; /* Valor final */
+  border-radius:999px; 
+  border:1px solid rgba(0,0,0,0.06); /* Valor final */
+  margin-right:6px; /* Valor final */
+  background:#fff; color:#111;
   cursor:pointer; font-weight:700; white-space:nowrap;
   transition:transform .08s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
   min-height:36px; /* melhor toque */
 }
 .chip-atividade:hover{ transform:translateY(-1px); border-color:var(--azul-moinhos) }
 .chip-atividade:focus-visible{ outline:none; box-shadow: var(--focus-ring) }
-.chip-atividade.ativo{ background:var(--azul-moinhos); color:#fff; border-color:var(--azul-moinhos) }
+.chip-atividade.ativo{ background:#0b5ed7; color:#fff; border-color:transparent; } /* Valor final */
 .chip-atividade .badge{
   display:inline-block; font-size:.78em; margin-left:.45rem; padding:.1rem .45rem; border-radius:999px; background:rgba(0,0,0,.08)
 }
@@ -161,26 +170,36 @@ header{
 
 /* --------- Slots (Grid fluido) --------- */
 .slots-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap:10px; padding:6px 4px 14px;
+  display:flex; /* Valor final */
+  flex-wrap:wrap;
+  gap:8px; /* Valor final */
+  padding:6px 4px 14px;
+  margin-top:8px; /* Valor final */
 }
 
 .slot-horario{
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:14px 10px; border-radius:var(--radius-10); text-align:center; font-weight:700;
-  box-shadow: var(--shadow-sm);
-  transition:transform .18s, background-color .2s, border-color .2s;
-  border:1px solid transparent; touch-action: manipulation; min-height:84px;
+  position: relative;
+  padding: 12px 10px; 
+  border-radius:6px; /* Valor final */
   background:#fff;
+  margin:6px 4px;
+  display:inline-flex;
+  flex-direction:column; align-items:center; justify-content:center;
+  gap:8px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.03); /* Valor final */
+  min-width:120px;
+  vertical-align: top;
+  text-align:center; font-weight:700;
+  transition:transform .18s, background-color .2s, border-color .2s;
+  border:1px solid transparent; touch-action: manipulation;
 }
 .slot-horario:focus-visible{ outline:none; box-shadow: var(--focus-ring) }
 
-.horario-label{ font-size:var(--fs-300); margin-bottom:4px }
-.vagas-label{ font-weight:600; color:#2e5b2e; font-size:var(--fs-200) }
+.horario-label{ font-size:var(--fs-300); margin-bottom:4px; margin-right:6px; color:#fff; }
+.vagas-label{ font-weight:600; color: rgba(255,255,255,0.8); font-size:12px; }
 
 /* Status */
-.status-disponivel{ background:#d4edda; color:#155724; cursor:pointer }
+.status-disponivel{ background: #2d8a62; color: #fff; cursor:pointer } /* Valor final */
 .status-disponivel:hover{ background:var(--verde-moinhos); color:#fff; transform:scale(1.02) }
 .status-lotado{ background:#f8d7da; color:#721c24; cursor:not-allowed }
 .status-indisponivel{ background:#f2f2f2; color:#6c757d; cursor:not-allowed }
@@ -188,35 +207,63 @@ header{
 
 /* --- Modo Admin --- */
 .aviso-admin{
-  font-weight:700; color:#dc3545; padding:10px; margin-bottom:12px; border:1px dashed #dc3545;
-  background:#fef7f7; text-align:center
+  background:#fff3f3; color:#a10b0b; padding:8px 12px; border-radius:6px; margin: 10px 0; border: 1px solid #ffd6d6;
+  font-weight:600; /* Valor final */
+  text-align:center
 }
 .slot-horario .admin-id{ font-size:.78em; color:#6c757d; margin-bottom:3px }
 .slot-horario .status-admin-reservas{ font-weight:400; color:var(--cinza-texto); margin-top:3px; font-size:.9em }
+/* Botão Excluir pequeno (X) */
+.btn-admin-excluir {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 0;
+  background: #e04b4b;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
 .slot-horario button.status-admin-excluir{
-  background:none; border:none; padding:0; margin-top:6px; font-size:.95em; font-weight:800; cursor:pointer;
-  text-decoration:underline; color:#c9302c
+  /* Sobrescrita de estilo para o link de exclusão dentro do slot, não o X */
+  background:none; border:none; padding:0; margin-top:6px; font-size:.95em; font-weight:800; cursor:pointer;
+  text-decoration:underline; color:#c9302c;
+  position: static;
 }
 .slot-horario button.status-admin-excluir:hover{ color:#8b0000 }
+.btn-admin-excluir[disabled] { opacity: 0.6; cursor: default; }
 
 .status-admin-ativo.status-disponivel{
   background:#ffc9c9!important; color:#c9302c!important; border:1px solid #dc3545!important
 }
 .status-admin-ativo.status-disponivel:hover{ background:#dc3545!important; color:#fff!important }
+/* Adicionar slot admin */
 .status-admin-adicionar{
-  background:#d4edda!important; color:#155724!important; border:1px solid var(--verde-moinhos)!important; cursor:pointer
+  display:flex; align-items:center; justify-content:center; min-width:140px; background:#f8fafc; border:1px dashed #cfe7ff; color:#0b5ed7; font-weight:600;
+  cursor:pointer
 }
 .status-admin-adicionar:hover{ background:var(--verde-moinhos)!important; color:#fff!important; transform:scale(1.02) }
+.adicionar-label { padding:6px; }
+
 
 /* --------- Modais --------- */
 .modal-overlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.6);
-  display:flex; justify-content:center; align-items:center; z-index:1000; opacity:0; transition:opacity .3s ease
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.35);
+  z-index:1000; opacity:0; transition:opacity .25s;
 }
-.modal-overlay.hidden{ opacity:0; pointer-events:none }
+.modal-overlay.hidden{ display:none; opacity:0; pointer-events:none }
 .modal-content{
-  background:#fff; padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.2);
-  width:min(92vw, 520px); max-height:90vh; overflow:auto; text-align:left
+  background:#fff; padding:18px; border-radius:8px; max-width:520px; width:92%; box-shadow:0 8px 24px rgba(2,6,23,0.2);
+  max-height:90vh; overflow:auto; text-align:left
 }
 .large-modal .modal-content{ width:min(94vw, 720px) }
 .modal-content h2{ margin:0 0 12px; color:var(--azul-moinhos) }
@@ -237,7 +284,7 @@ header{
 }
 .item-reserva{
   display:flex; justify-content:space-between; align-items:center; gap:10px;
-  padding:10px; border-bottom:1px solid #f0f0f0
+  padding:8px 6px; border-bottom:1px solid #f1f5f9; /* Valor final */
 }
 .item-reserva:last-child{ border-bottom:none }
 .item-reserva span{ flex:1; font-size:var(--fs-200) }
@@ -260,10 +307,10 @@ header{
 .personagem-container{ position:relative; width:100%; height:100px; overflow:hidden }
 .personagens-loop{
   height:100%; width:200vw; background:url('img/personagens-casa-natal.png') repeat-x 0 10px/auto 80px;
-  /* Linha 'transform:scaleX(-1);' REMOVIDA */
+  /* REMOVIDO: transform:scaleX(-1); */
   animation:rolarFundo 30s linear infinite;
 }
-/* Ajuste de animação para rolamento reverso correto */
+/* Keyframes ajustado para rolar na direção correta */
 @keyframes rolarFundo{ from{ background-position-x:-1920px } to{ background-position-x:0 } }
 
 /* Utilidades */
@@ -293,18 +340,20 @@ header{
 }
 
 /* Phones */
-@media (max-width: 520px){
+@media (max-width: 600px){
   #seletor-container{ padding:12px; gap:10px }
   #seletor-container label{ width:100%; text-align:left }
   #seletor-data{ width:100% }
   .dia-semana-label{ width:100%; text-align:left }
   .btn-acao{ width:100% }
-  .slots-grid{ padding:6px 10px 12px }
+  .slots-grid { gap:6px; }
+  .slot-horario { min-width:110px; padding:10px; }
   .horario-label{ font-size:var(--fs-300) }
   .vagas-label{ font-size:var(--fs-200) }
   .modal-content{ width:calc(100vw - 24px); max-height:92vh }
   .large-modal .modal-content{ width:calc(100vw - 16px) }
   .personagem-container{ height:80px }
+  .btn-admin-excluir { top:4px; right:4px; width:20px; height:20px; font-size:12px; }
 }
 
 /* Acessibilidade e movimento */
@@ -329,96 +378,4 @@ header{
   .chip-atividade{ background:#171a1f; border-color:#2b2f36; color:#e9ecef }
   .status-indisponivel{ background:#1e2229; color:#b0b8c2 }
   .status-fechado{ background:#1a1d23; color:#cdd6df }
-}
-
-/* Reinicialização de Variáveis e Estilos Duplicados (limpeza e ajuste fino) */
-
-:root{
-  --cinza-borda: #e6eef6; 
-  --cinza-texto: #6c757d;
-  --verde-moinhos: #1b8a4a; 
-}
-
-/* Botões básicos (ajustes finais) */
-.btn-acao { padding:8px 12px; border-radius:6px; border:0; cursor:pointer; font-weight:600; }
-.btn-cinza { background:#f3f4f6; color:#111827; }
-.btn-azul  { background:#0b5ed7; color:#fff; }
-.btn-vermelho { background:#dc3545; color:#fff; }
-
-.btn-modal { padding:8px 12px; border-radius:6px; border:0; cursor:pointer; margin:4px; }
-.btn-modal.btn-cinza { background:#f3f6f8; }
-.btn-modal.btn-azul  { background:#0b5ed7; color:#fff; }
-.btn-modal.btn-vermelho { background:#e04b4b; color:#fff; }
-
-/* Chips de atividade (ajustes finais) */
-.chip-atividade { 
-    padding:6px 10px; 
-    border-radius:999px; 
-    border:1px solid rgba(0,0,0,0.06); 
-    margin-right:6px; 
-    cursor:pointer; 
-    background:#fff; 
-}
-.chip-atividade.ativo { background:#0b5ed7; color:#fff; border-color:transparent; }
-
-/* Slots grid (simplificado) */
-.slots-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-
-/* Reserva list (ajustes finais) */
-.item-reserva { display:flex; justify-content:space-between; align-items:center; padding:8px 6px; border-bottom:1px solid #f1f5f9; }
-
-/* Slot item styling (ajuste final) */
-.slot-horario {
-  position: relative;
-  padding: 12px 10px;  
-  border-radius:6px;
-  background:#fff;
-  margin:6px 4px;
-  display:inline-flex;
-  gap:8px;
-  align-items:center;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.03);
-  min-width:120px;
-  vertical-align: top;
-}
-.slot-horario .horario-label { font-weight:700; margin-right:6px; color:#fff; }
-.slot-horario .vagas-label { font-size:12px; color: rgba(255,255,255,0.8); }
-
-/* Exemplo de cor de slot (ajuste final) */
-.status-disponivel { background: #2d8a62; color: #fff; }
-
-/* Botão Excluir pequeno (X) (ajuste final) */
-.btn-admin-excluir {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 0;
-  background: #e04b4b;
-  color: #fff;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-}
-.btn-admin-excluir[disabled] { opacity: 0.6; cursor: default; }
-
-/* Adicionar slot admin (ajuste final) */
-.status-admin-adicionar { display:flex; align-items:center; justify-content:center; min-width:140px; background:#f8fafc; border:1px dashed #cfe7ff; color:#0b5ed7; font-weight:600; }
-.adicionar-label { padding:6px; }
-
-/* Admin aviso (ajuste final) */
-.aviso-admin { background:#fff3f3; color:#a10b0b; padding:8px 12px; border-radius:6px; margin: 10px 0; border: 1px solid #ffd6d6; }
-
-/* Regras para responsividade básicas (ajustes finais) */
-@media (max-width:600px){
-  .slots-grid { gap:6px; }
-  .slot-horario { min-width:110px; padding:10px; }
-  .btn-admin-excluir { top:4px; right:4px; width:20px; height:20px; font-size:12px; }
 }
