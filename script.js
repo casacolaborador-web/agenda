@@ -130,6 +130,7 @@ const professionalRules = {
   'Luis': { activities: ['Quick Massage'], type: 'quick_massage', defaultVagas: 1 },
   'Maria Eduarda': { activities: ['Quick Massage'], type: 'quick_massage', defaultVagas: 1 },
   'Rafael': { activities: ['Quick Massage', 'Reiki'], type: 'mixed', defaultVagas: 1 }
+  'José': { activities: ['Yoga'], type: 'aula', defaultVagas: 12 }
 };
 
 const quickMassageHours = [
@@ -904,3 +905,4 @@ if (btnDashExport) btnDashExport.addEventListener('click', exportarDashboard);
 
 // ================== Start ==================
 carregarAgenda();
+
